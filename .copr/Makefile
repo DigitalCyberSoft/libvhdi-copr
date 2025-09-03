@@ -118,7 +118,7 @@ srpm:
 		--define "_sourcedir $(PWD)" \
 		--define "_specdir $(PWD)" \
 		--define "_builddir $(PWD)" \
-		--define "_srcrpmdir $(OUTDIR)" \
+		--define "_srcrpmdir $(outdir)" \
 		--define "_rpmdir $(PWD)" \
 		libvhdi.spec
 	
