@@ -1,0 +1,31 @@
+# Build artifacts
+*.rpm
+*.src.rpm
+*.tar.gz
+*.tar.xz
+*.tar.bz2
+
+# Build directories
+BUILD/
+BUILDROOT/
+RPMS/
+SRPMS/
+SOURCES/
+
+# Temp files
+*.swp
+*.tmp
+*~
+.*.sw?
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local build results
+rpmbuild/
+build-results/
