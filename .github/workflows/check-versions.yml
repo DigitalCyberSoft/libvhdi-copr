@@ -1,0 +1,41 @@
+name: Check for Updates
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for new libvhdi release
+        id: check
+        run: |
+          # Get latest release tag from GitHub
+          LATEST=$(curl -sf https://api.github.com/repos/libyal/libvhdi/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p')
+          CURRENT=$(sed -n 's/^VERSION = //p' .copr/Makefile)
+          echo "Latest: $LATEST, Current: $CURRENT"
+          if [ "$LATEST" != "$CURRENT" ] && [ -n "$LATEST" ]; then
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+            echo "version=$LATEST" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update and push
+        if: steps.check.outputs.changes == 'true'
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          sed -i "s/^VERSION = .*/VERSION = ${{ steps.check.outputs.version }}/" .copr/Makefile
+          git add .copr/Makefile
+          git commit -m "Auto-update: libvhdi ${{ steps.check.outputs.version }}"
+          git push
+
+      - uses: gautamkrishnar/keepalive-workflow@v2
+        with:
+          time_elapsed: 45
