@@ -19,8 +19,8 @@ jobs:
       - name: Check for new libvhdi release
         id: check
         run: |
-          # Get latest release tag from GitHub
-          LATEST=$(curl -sf https://api.github.com/repos/libyal/libvhdi/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p')
+          # Get latest tag from GitHub (libyal uses tags, not releases)
+          LATEST=$(curl -sf 'https://api.github.com/repos/libyal/libvhdi/tags?per_page=1' | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p')
           CURRENT=$(sed -n 's/^VERSION = //p' .copr/Makefile)
           echo "Latest: $LATEST, Current: $CURRENT"
           if [ "$LATEST" != "$CURRENT" ] && [ -n "$LATEST" ]; then
