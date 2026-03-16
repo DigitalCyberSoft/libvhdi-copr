@@ -2,7 +2,7 @@
 # This is self-contained - generates spec file and downloads source
 
 # Version to build
-VERSION = 20240509
+VERSION = 20251119
 
 # Download URL for the source tarball
 TARBALL_URL = https://github.com/libyal/libvhdi/releases/download/$(VERSION)/libvhdi-alpha-$(VERSION).tar.gz
