@@ -18,24 +18,36 @@ jobs:
 
       - name: Check for new libvhdi release
         id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           # Get latest tag from GitHub (libyal uses tags, not releases)
-          LATEST=$(curl -sf 'https://api.github.com/repos/libyal/libvhdi/tags?per_page=1' | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p')
+          LATEST=$(curl -sf -H "Authorization: Bearer ${GITHUB_TOKEN}" --connect-timeout 15 --max-time 60 --retry 3 --retry-all-errors 'https://api.github.com/repos/libyal/libvhdi/tags?per_page=1' | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p')
+          # Hard error: silently treating an API failure as "no change"
+          # would skip the check while the run reports success.
+          if [ -z "$LATEST" ]; then
+            echo "ERROR: could not determine latest libvhdi tag from GitHub API" >&2
+            exit 1
+          fi
           CURRENT=$(sed -n 's/^VERSION = //p' .copr/Makefile)
           echo "Latest: $LATEST, Current: $CURRENT"
-          if [ "$LATEST" != "$CURRENT" ] && [ -n "$LATEST" ]; then
+          if [ "$LATEST" != "$CURRENT" ]; then
             echo "changes=true" >> "$GITHUB_OUTPUT"
             echo "version=$LATEST" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Update and push
         if: steps.check.outputs.changes == 'true'
+        env:
+          # env indirection keeps the upstream-controlled tag name out of
+          # shell interpolation (script-injection hardening)
+          NEW_VERSION: ${{ steps.check.outputs.version }}
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          sed -i "s/^VERSION = .*/VERSION = ${{ steps.check.outputs.version }}/" .copr/Makefile
+          sed -i "s/^VERSION = .*/VERSION = ${NEW_VERSION}/" .copr/Makefile
           git add .copr/Makefile
-          git commit -m "Auto-update: libvhdi ${{ steps.check.outputs.version }}"
+          git commit -m "Auto-update: libvhdi ${NEW_VERSION}"
           git push
 
       - name: Verify CI configuration
